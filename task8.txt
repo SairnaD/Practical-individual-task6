@@ -1,0 +1,60 @@
+Task 8: Coverage check
+
+I ran all tests with coverage in IntelliJ after finishing tasks 1-7 and the
+stretch goals. All tests passed. Then I looked at which lines were red and yellow.
+Total coverage: 88% classes, 80% lines, 62% branches.
+Branch coverage is the lowest, so I looked mostly at it.
+
+What I found
+
+1. AnimalType is completely red. I never wrote tests for it.
+2. In AnimalSorter 85% lines, 62% branches. The "animals == null" check is yellow
+in sortByName, sortByIntakeDate and sortBySpeciesThenAgeDescending.
+I only tested null for sortByAge, so the three "return List.of()" lines are red.
+3. In AnimalCsvParser 96% lines, 88% branches.
+In parseRow the condition "name.isEmpty() || species.isEmpty()" is yellow (empty species is never tested).
+In parseFile "if (header == null)" is yellow and its return is red.
+4. In IntakeService 87% branches. findByName is never called with null, only with an empty string.
+5. In AnimalValidator 93% branches. A null species is never tested, only an  empty one.
+6. In Animal: 57% lines, 6% branches. equals() is only run for the same object,
+and hashCode() and toString() are probably never called.
+
+Would tests for these catch real bugs?
+
+1. AnimalType - yes, this is the most important one. isSenior has a real
+rule (age > lifespan / 2). If someone changes > to >= or breaks the division,
+none of my tests would fail. fromDisplayName also has logic (ignore case, trim, null and blank input).
+The getters and the constructor are simple, so I would not test them.
+
+2. AnimalSorter null checks - yes, but less important. The four methods have
+the same code copied. If someone deletes the null check in one of them, it
+would crash with NullPointerException, and only sortByAge has a test.
+Each test would be very short.
+
+3. Empty species in parseRow - yes. This rule protects against bad CSV rows.
+If it is removed, rows without species would be accepted and no test would notice.
+
+4. Empty file in parseFile - no. I think this branch is not needed.
+For an empty file the while loop calls readLine(), gets null and returns the same empty result anyway.
+So even if this branch was broken, the result would  not change, and a test could not find a bug.
+Writing a test only to get 100% would not help.
+
+5. IntakeService.findByName(null) and AnimalValidator null species - low value.
+The code uses "x == null || x.isBlank()", and the isBlank() part is already tested with an empty string.
+A test for null would only check the first half of the condition.
+It is cheap, but it is unlikely to find a real bug.
+
+6. Animal equals/hashCode - medium. They are normal generated code, so I did not test them directly.
+But the report shows that my tests only use equals for the same object.
+If someone forgets a field in equals(), nothing would fail.
+A test for equals/hashCode could be useful if Animal is used in sets or maps.
+toString and getters I would still skip.
+
+What I learned
+
+- 100% coverage does not mean no bugs. For example toMonths(Integer.MAX_VALUE)
+overflows int and returns a negative number, but the line is "covered"
+because I tested toMonths with normal values.
+- Yellow lines were more useful than red ones, because they show conditions where only one case was tested.
+- Line coverage looked good (80%), but branch coverage was only 62%. So it  is better to look at both numbers.
+- Not every uncovered branch needs a test. I decided by asking: if this code was broken, would the behavior change?
